@@ -1,22 +1,21 @@
-/**
- * The demo for chat application in go lang for local network
- *
- * Abhijet Pokhrel
- * (c) 2018
- */
 package main
+
+// The demo chat applicaiton fro go lang
+//
+// Abhijet Pokhrel
+// (c) 2018
 
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 /**
  * The HANDLER object handle the entire rooms for chat
  * - It is created when server/client mode is used
  */
-var HANDLER: Handler,
-    PORT:=5050
+var HANDLER Handler
 
 /**
  * The main function
@@ -52,12 +51,51 @@ func execute(a []string) {
 func executeMode(param []string) {
 	fmt.Printf("execute mode command : %s \n", param)
 
-	if(param[0] == "server"){
-		server := Server{
-			roomId : param[1]
+	HANDLER = Handler{}
+
+	if param[0] == "server" {
+
+		if len(param) <= 1 {
+			fmt.Println("Enter port information")
+			return
+		}
+		PORT, err := strconv.Atoi(param[1])
+
+		if err != nil {
+			fmt.Println("Error port num!!!")
+			return
 		}
 
+		server := Server{}
 		server.start(PORT)
+		return
+
+	}
+
+	if param[0] == "client" {
+
+		if len(param) <= 1 {
+			fmt.Println("Enter IP information")
+			return
+		}
+
+		if len(param) <= 2 {
+			fmt.Println("Enter port information")
+			return
+		}
+
+		IP := param[1]
+		PORT, err := strconv.Atoi(param[2])
+
+		if err != nil {
+			fmt.Println("Error valid port num!!!")
+			return
+		}
+
+		client := Client{}
+		client.connect(IP, PORT)
+		return
+
 	}
 
 }
