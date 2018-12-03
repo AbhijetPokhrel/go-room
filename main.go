@@ -12,10 +12,15 @@ import (
 )
 
 /**
+ * The default server room
+ */
+var DEFAULT_SERVER_ROOM = "Server787800p"
+
+/**
  * The HANDLER object handle the entire rooms for chat
  * - It is created when server/client mode is used
  */
-var HANDLER Handler
+var HANDLER = new(Handler)
 
 /**
  * The main function
@@ -24,6 +29,9 @@ var HANDLER Handler
  */
 func main() {
 	args := os.Args
+
+	HANDLER.init()
+
 	if len(args) == 1 {
 		fmt.Println("Hey need support!!")
 	} else if len(args) == 2 {
@@ -51,8 +59,6 @@ func execute(a []string) {
 func executeMode(param []string) {
 	fmt.Printf("execute mode command : %s \n", param)
 
-	HANDLER = Handler{}
-
 	if param[0] == "server" {
 
 		if len(param) <= 1 {
@@ -75,16 +81,21 @@ func executeMode(param []string) {
 	if param[0] == "client" {
 
 		if len(param) <= 1 {
-			fmt.Println("Enter IP information")
+			fmt.Println("Enter IP information \n\t <IP> <PORT> <CLIENT_ID>")
 			return
 		}
 
 		if len(param) <= 2 {
-			fmt.Println("Enter port information")
+			fmt.Printf("Enter port information : \n\t%s <PORT> <CLIENT_ID> \n", param[1])
 			return
 		}
 
-		IP := param[1]
+		if len(param) <= 3 {
+			fmt.Printf("Enter clietn ID : \n\t%s %s <CLIENT_ID> \n", param[1], param[2])
+			return
+		}
+
+		var IP, clientID = param[1], param[3]
 		PORT, err := strconv.Atoi(param[2])
 
 		if err != nil {
@@ -92,7 +103,7 @@ func executeMode(param []string) {
 			return
 		}
 
-		client := Client{}
+		client := Client{id: clientID}
 		client.connect(IP, PORT)
 		return
 

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 )
@@ -11,8 +10,8 @@ import (
  */
 
 type Client struct {
-	ID   string   // the client ID
-	conn net.Conn // the server sock for client side and client sock for server side
+	id   string    // the client ID
+	conn *net.Conn // the server sock for client side and client sock for server side
 }
 
 /**
@@ -29,8 +28,13 @@ func (client *Client) connect(IP string, PORT int) {
 		return
 	}
 
-	client.conn = conn
-	err = client.sendMessage("I am client")
+	client.conn = &conn
+
+	message := Message{
+		ClientID: client.id,
+	}
+
+	err = client.sendMessage(message.controlInit())
 
 	if err != nil {
 		fmt.Println(err)
@@ -51,21 +55,12 @@ func (client *Client) onMessageReceived() {
 /**
  * Send Message
  */
-func (client *Client) sendMessage(message string) error {
+func (client *Client) sendMessage(message []byte) error {
 
-	msgObj := map[string]string{
-		"msg":      message,
-		"clientId": client.ID,
-	}
-	jsonObj, err := json.Marshal(msgObj)
+	_, err := (*client.conn).Write(message)
 
 	if err != nil {
 		return err
-	}
-	_, err1 := client.conn.Write(jsonObj)
-
-	if err1 != nil {
-		return err1
 	}
 	return nil
 }

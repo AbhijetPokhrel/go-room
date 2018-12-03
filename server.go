@@ -45,7 +45,7 @@ func (server *Server) listen(listener net.Listener, done chan bool) {
 			fmt.Println(err)
 		}
 
-		go HANDLER.handleClient(conn)
+		go HANDLER.handleClient(&conn)
 		//every thing is ok
 	}
 

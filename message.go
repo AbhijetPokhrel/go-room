@@ -4,15 +4,54 @@
 
 package main
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 type Message struct {
+	ClientID string
+	Msg      string
+	MSG_TYPE int
 }
 
-var MSG_TYPE = map[string]int{
-	"CONTROL": 1,
-	"STR_MSG": 2,
+var MsgType = map[string]int{
+	"CONTROL_INIT": 100,
+	"CONTROL_END":  101,
+	"STR_MSG":      200,
 }
 
-var CNTRL_MSG_TYPE = map[string]int{
-	"INIT": 1,
-	"END":  2,
+/**
+ * Generate the string message ie normal message
+ */
+func (message *Message) str(msg string) []byte {
+	message.Msg = msg
+
+	message.MSG_TYPE = MsgType["STR_MSG"]
+
+	return generateByte(message)
+}
+
+/**
+ * Gnereate control message
+ */
+
+func (message *Message) controlInit() []byte {
+
+	message.MSG_TYPE = MsgType["CONTROL_INIT"]
+
+	return generateByte(message)
+}
+
+func generateByte(message *Message) []byte {
+
+	json, err := json.Marshal(*message)
+
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	return json
+
 }
