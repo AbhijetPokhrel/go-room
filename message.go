@@ -21,6 +21,8 @@ var MsgType = map[string]int{
 	"STR_MSG":      200,
 }
 
+var MSG_SEP = []byte{'%', '/', 'y', '#', '!'}
+
 /**
  * Generate the string message ie normal message
  */
@@ -52,6 +54,6 @@ func generateByte(message *Message) []byte {
 		return nil
 	}
 
-	return json
+	return append(json, MSG_SEP...)
 
 }
