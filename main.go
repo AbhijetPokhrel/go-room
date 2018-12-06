@@ -1,9 +1,18 @@
-package main
+/*
+	Package main consists of server and client model
 
-// The demo chat applicaiton fro go lang
-//
-// Abhijet Pokhrel
-// (c) 2018
+   					The Working
+		----------------------------------------
+
+		The server will listen to a spwcific port
+
+		In order to run the server type
+		+-------------------------------------------------+
+		|	<EXEC_CMD> mode server <PORT_NUM>             |
+	+-------------------------------------------------+
+*/
+
+package main
 
 import (
 	"fmt"
