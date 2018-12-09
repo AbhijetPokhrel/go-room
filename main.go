@@ -29,7 +29,7 @@ var DEFAULT_SERVER_ROOM = "Server787800p"
  * The HANDLER object handle the entire rooms for chat
  * - It is created when server/client mode is used
  */
-var HANDLER = new(Handler)
+var handler = new(Handler)
 
 /**
  * The main function
@@ -39,7 +39,7 @@ var HANDLER = new(Handler)
 func main() {
 	args := os.Args
 
-	HANDLER.init()
+	handler.init()
 
 	if len(args) == 1 {
 		fmt.Println("Hey need support!!")

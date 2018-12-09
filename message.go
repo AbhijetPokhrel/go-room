@@ -1,7 +1,3 @@
-/**
- * The message wrapper
- */
-
 package main
 
 import (
@@ -9,42 +5,39 @@ import (
 	"fmt"
 )
 
+// Message is the prototype of message payload
+// It is formatted in the message byte to send to the server
+// ClientID is the id of the sender
+// ReceiverID is the id of the receiver client
+// RoomID is the id of the room for which it was assigned for
+// Msg is the string message
+// MsgType is the type of the message that is being sent (For more details on message type see constants)
 type Message struct {
-	ClientID string
-	Msg      string
-	MSG_TYPE int
+	ClientID   string
+	ReceiverID string
+	RoomID     string
+	Msg        string
+	MsgType    int
 }
 
-var MsgType = map[string]int{
-	"CONTROL_INIT": 100,
-	"CONTROL_END":  101,
-	"STR_MSG":      200,
-}
-
-var MSG_SEP = []byte{'%', '/', 'y', '#', '!'}
-
-/**
- * Generate the string message ie normal message
- */
+// str generates the message byte for string message
 func (message *Message) str(msg string) []byte {
 	message.Msg = msg
 
-	message.MSG_TYPE = MsgType["STR_MSG"]
+	message.MsgType = norStrMsg
 
 	return generateByte(message)
 }
 
-/**
- * Gnereate control message
- */
-
+// controlInit generates the control message for initiating establishing a connection with the server
 func (message *Message) controlInit() []byte {
 
-	message.MSG_TYPE = MsgType["CONTROL_INIT"]
+	message.MsgType = ctrlInitMsg
 
 	return generateByte(message)
 }
 
+// generateByte generates the necessary byte along with the server
 func generateByte(message *Message) []byte {
 
 	json, err := json.Marshal(*message)
@@ -54,6 +47,6 @@ func generateByte(message *Message) []byte {
 		return nil
 	}
 
-	return append(json, MSG_SEP...)
+	return append(json, MsgSep...)
 
 }
