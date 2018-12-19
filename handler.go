@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"go_chat/helper"
 	"net"
+	"sync"
 )
 
 // Handler handles the client connections
 type Handler struct {
 	rooms   map[string]*Room   //diffrent Room is present in the server
 	clients map[string]*Client //diffrest sockets of clients map
+	mutex   *sync.Mutex        //for add and remove client operation
 }
 
 // Room is the room where client chat
@@ -24,14 +26,31 @@ type Room struct {
 func (handler *Handler) init() {
 	//init handler here
 	handler.rooms = make(map[string]*Room)
-	handler.sockets = make(map[string]*net.Conn)
+	handler.clients = make(map[string]*Client)
+	handler.mutex = &sync.Mutex{}
 }
 
 // addClient  will add client to the default handler room of server
 func (handler *Handler) addClient(client *Client) {
 
+	handler.mutex.Lock()
 	fmt.Printf("client added \n")
+	// add the client to the map
 	handler.clients[(*client).id] = client
+	handler.mutex.Unlock()
+
+}
+
+// removeClient removes the client
+func (handler *Handler) removeClient(client *Client) {
+
+	handler.mutex.Lock()
+	fmt.Printf("removing client( %s )\n", client.id)
+	// terminate the client
+	client.terminate()
+	// delete the client from the map
+	delete(handler.clients, client.id)
+	handler.mutex.Unlock()
 
 }
 

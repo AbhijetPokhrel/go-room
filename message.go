@@ -21,8 +21,7 @@ type Message struct {
 }
 
 // str generates the message byte for string message
-func (message *Message) str(msg string) []byte {
-	message.Msg = msg
+func (message *Message) str() []byte {
 
 	message.MsgType = norStrMsg
 

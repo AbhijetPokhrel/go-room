@@ -44,7 +44,7 @@ func (server *Server) listen(listener net.Listener, done chan bool) {
 			fmt.Println(err)
 		}
 
-		go handleClient(&conn)
+		go server.handleClient(&conn)
 		//every thing is ok
 	}
 
@@ -55,7 +55,7 @@ func (server *Server) listen(listener net.Listener, done chan bool) {
 // Determines what kind of payload is it
 // Finally replies as per the payload type
 // Payloa is simply the MsgType (Refer constants for MsgType)
-func handleClient(conn *net.Conn) {
+func (server *Server) handleClient(conn *net.Conn) {
 
 	fmt.Printf("Adding new client\n")
 
@@ -71,7 +71,7 @@ func handleClient(conn *net.Conn) {
 		return
 	}
 
-	fmt.Printf("msg :` %s`", msg)
+	fmt.Printf("msg :` %s`\n", msg)
 
 	//decode the message
 	message := new(Message)
@@ -89,15 +89,55 @@ func handleClient(conn *net.Conn) {
 		return
 	}
 
-	err = handleMessage(message, conn)
+	err = server.handleMessage(message, conn)
 
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 
 }
 
-func handleMessage(message *Message, conn *net.Conn) error {
+// startListeningFromClient listens from the client
+// its loaded from the groutine and will notify the clients state (dead,alive or else)
+// it consists of a channel that will mark the termination of the client listening the channel will be the error channek
+// once the go routine is terminated the clients go routine will also terminate
+func (server *Server) startListeningFromClient(client *Client) error {
+
+	var err error
+	var msg []byte
+
+	for {
+
+		msg, err = handler.read(client.conn)
+
+		if err != nil {
+			return err
+		}
+
+		if err != nil {
+			handler.removeClient(client)
+		}
+
+		fmt.Printf("msg : %s\n", msg)
+		//decode the message
+		message := new(Message)
+		err = json.Unmarshal(msg, &message)
+
+		if err != nil {
+			return err
+		}
+
+		err = server.handleMessage(message, client.conn)
+
+		if err != nil {
+			return err
+		}
+
+	}
+}
+
+func (server *Server) handleMessage(message *Message, conn *net.Conn) error {
 
 	switch message.MsgType {
 
@@ -118,6 +158,15 @@ func handleMessage(message *Message, conn *net.Conn) error {
 		}
 		// finally add client to handler
 		handler.addClient(&client)
+		// now listen from the client
+		err = server.startListeningFromClient(&client)
+		if err != nil {
+			fmt.Println("error ")
+			handler.removeClient(&client)
+			return err
+		}
+	case norStrMsg:
+		// normal string message
 
 	}
 	return nil
