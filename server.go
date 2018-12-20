@@ -167,7 +167,20 @@ func (server *Server) handleMessage(message *Message, conn *net.Conn) error {
 		}
 	case norStrMsg:
 		// normal string message
-
+		server.processNewMessage(message)
 	}
 	return nil
+}
+
+// processNewMessage will handle the new string message from the client
+// first it will check if the room for which the message has arrived is available
+// if there is room it will broadcast the message to the room
+// if there is no room then it will create the new room
+func (server *Server) processNewMessage(message *Message) {
+
+	if room, available := handler.rooms[message.RoomID]; available {
+		room.broadCast(message)
+	} else { // so there is no such room, lets create one
+		handler.createRoom(message.RoomID, message.ClientID)
+	}
 }

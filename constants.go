@@ -41,3 +41,6 @@ var norStrMsg = normalMsg | (0x01) // 0000 0001
 var norFileMsg = normalMsg | (0x02) // 0000 0010s
 
 // +------------------------------### Msg section Ends ###---------------------------------------------+
+
+// defaultRoom is the default room for chat in this application
+var defautRoom = "ROOM_DEF12"

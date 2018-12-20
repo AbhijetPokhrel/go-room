@@ -19,7 +19,73 @@ type Handler struct {
 // Room is the room where client chat
 // A single client can be in multitple rooms
 type Room struct {
+	id      string
+	mutex   *sync.Mutex
 	clients []*Client
+}
+
+// init initializes the room
+func (room *Room) init() {
+	room.clients = []*Client{}
+	room.mutex = &sync.Mutex{}
+}
+
+// broadCast will broadcast a string meesage to the room
+func (room *Room) broadCast(message *Message) {
+
+	fmt.Printf("broadcasting to room %s(%d)\n", room.id, len(room.clients))
+	found := false
+	for _, client := range room.clients {
+		client.addMsgQueue(message)
+		if !found {
+			if client.id == message.ClientID {
+				found = true
+			}
+		}
+	}
+
+	if !found {
+		room.addClient(handler.clients[message.ClientID])
+	}
+
+}
+
+// addClient adds client to the room
+// also addes the room to the clients room array
+func (room *Room) addClient(client *Client) {
+
+	room.mutex.Lock()
+	defer room.mutex.Unlock()
+
+	fmt.Printf("adding client : %s to room : %s \n", client.id, room.id)
+	room.clients = append(room.clients, client)
+	client.rooms = append(client.rooms, room)
+
+}
+
+// removeClient removes the client from the room
+func (room *Room) removeClient(clientID string) {
+
+	room.mutex.Lock()
+	fmt.Printf("remove client : %s from room : %s \n", clientID, room.id)
+
+	for i, v := range room.clients {
+		if v.id == clientID { // client found so delete it and break the loop
+			room.clients = append(room.clients[:i], room.clients[i+1:]...)
+			break
+		}
+	}
+
+	room.mutex.Unlock()
+}
+
+// clientsNum returns the total number of clients in a room
+func (room *Room) clientsNum() int {
+
+	room.mutex.Lock()
+	defer room.mutex.Unlock()
+	return len(room.clients)
+
 }
 
 // init initializest the handler
@@ -30,14 +96,39 @@ func (handler *Handler) init() {
 	handler.mutex = &sync.Mutex{}
 }
 
+// createRoom creates a new room in the server
+func (handler *Handler) createRoom(roomID string, clientID string) {
+
+	handler.mutex.Lock()
+	defer handler.mutex.Unlock()
+
+	fmt.Printf("Creating a room : %s\n", roomID)
+	room := Room{id: roomID}
+	room.init()
+	room.addClient(handler.clients[clientID])
+	handler.rooms[roomID] = &room
+
+}
+
+func (handler *Handler) removeRoom(roomID string) {
+
+	handler.mutex.Lock()
+	defer handler.mutex.Unlock()
+
+	delete(handler.rooms, roomID)
+
+}
+
 // addClient  will add client to the default handler room of server
 func (handler *Handler) addClient(client *Client) {
 
 	handler.mutex.Lock()
+	defer handler.mutex.Unlock()
+
 	fmt.Printf("client added \n")
 	// add the client to the map
+	client.init()
 	handler.clients[(*client).id] = client
-	handler.mutex.Unlock()
 
 }
 

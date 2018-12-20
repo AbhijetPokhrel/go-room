@@ -6,21 +6,32 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"sync"
 
 	"github.com/Workiva/go-datastructures/queue"
 )
 
 // Client is the struct containign client infos
+// id is the id of the client
+// messageQueue is the queue of messages that the client is waiting to be sent
+// conn is the client socket conn
+// rooms is the array of rooms the client is associated with
+// mutex is the mutex to make sure the message sends are thread safe
+// isBusy marks if the cleint is busy sending the message from the message queue
 type Client struct {
 	id           string       // the client ID
 	messageQueue *queue.Queue // the queues of string message
 	conn         *net.Conn    // the server sock for client side and client sock for server side
 	rooms        []*Room      // the rooms that its associated with
+	mutex        *sync.Mutex  // mutex to make sure the message sends are thread safe
+	isBusy       bool         // is client busy sending messages
 }
 
 // init initailizes the client
 func (client *Client) init() {
 	client.messageQueue = queue.New(10)
+	client.rooms = []*Room{}
+	client.mutex = &sync.Mutex{}
 }
 
 // connect connects to the specific ip
@@ -39,9 +50,10 @@ func (client *Client) connect(IP string, PORT int) {
 
 	message := Message{
 		ClientID: client.id,
+		MsgType:  ctrlInitMsg,
 	}
 
-	err = client.sendInit(&message)
+	err = client.sendMessage(&message)
 
 	if err != nil {
 		fmt.Println(err)
@@ -79,12 +91,13 @@ func (client *Client) listenForServer(done chan bool) {
 
 		// every thing is ok
 		if message.MsgType == ctrlInitMsg {
-			fmt.Printf("Success: \n")
 			// initiate message queue
 			client.init()
+		} else if message.MsgType == norStrMsg {
+
+			fmt.Printf("\n (%s)>  : %s \n > : ", message.ClientID, message.Msg)
 		}
 
-		fmt.Printf(" >  : %s \n", message.Msg)
 	}
 
 }
@@ -93,14 +106,19 @@ func (client *Client) waitForUserInp() {
 
 	scanner := bufio.NewScanner(os.Stdin)
 	var text string
+
 	for text != "q" { // break the loop if text == "q"
+
 		fmt.Print(" > : ")
 		scanner.Scan()
 		text = scanner.Text()
+
 		if text != "q" {
 			message := Message{
 				ClientID: client.id,
 				Msg:      text,
+				MsgType:  norStrMsg,
+				RoomID:   defautRoom,
 			}
 			client.sendMessage(&message)
 		}
@@ -108,23 +126,51 @@ func (client *Client) waitForUserInp() {
 
 }
 
-// addMsgQueue adds the message to the clients to be sent by the server
+// addMsgQueue adds the message to the clients queue to be sent by the server
 func (client *Client) addMsgQueue(message *Message) {
+	if client.id == message.ClientID { // this message is sent by us so no need to add to queue
+		return
+	}
 	client.messageQueue.Put(message)
+	// if the client is not busy ask to send the message from the message queue
+	if !client.isBusy {
+		client.sendQueueMsgs()
+	}
+}
+
+func (client *Client) sendQueueMsgs() {
+
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
+
+	client.isBusy = true
+	fmt.Printf("client ( %s ) busy \n", client.id)
+	var message []interface{}
+	var err error
+	for !client.messageQueue.Empty() {
+		message, err = client.messageQueue.Get(1)
+		if err != nil {
+			break
+		}
+		client.sendMessage(message[0].(*Message))
+	}
+
+	client.isBusy = false
+	fmt.Printf("client ( %s ) free \n", client.id)
+
 }
 
 // terminate terminates a client
 func (client *Client) terminate() {
-	// TODO
-}
 
-// sendMessage sends the message to the server
-func (client *Client) sendInit(message *Message) error {
-
-	return handler.write(message.controlInit(), client.conn)
+	fmt.Printf("terminating the client : %s\n", client.id)
+	for _, room := range client.rooms {
+		room.removeClient(client.id)
+	}
 
 }
 
+// sendMessage sends the byte message to the server/client
 func (client *Client) sendMessage(message *Message) error {
-	return handler.write(message.str(), client.conn)
+	return handler.write(message.generateByte(), client.conn)
 }

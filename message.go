@@ -25,7 +25,7 @@ func (message *Message) str() []byte {
 
 	message.MsgType = norStrMsg
 
-	return generateByte(message)
+	return message.generateByte()
 }
 
 // controlInit generates the control message for initiating establishing a connection with the server
@@ -33,11 +33,11 @@ func (message *Message) controlInit() []byte {
 
 	message.MsgType = ctrlInitMsg
 
-	return generateByte(message)
+	return message.generateByte()
 }
 
 // generateByte generates the necessary byte along with the server
-func generateByte(message *Message) []byte {
+func (message *Message) generateByte() []byte {
 
 	json, err := json.Marshal(*message)
 
