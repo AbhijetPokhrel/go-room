@@ -34,6 +34,8 @@ func (client *Client) init() {
 	client.mutex = &sync.Mutex{}
 }
 
+var scanner *bufio.Scanner
+
 // connect connects to the specific ip
 func (client *Client) connect(IP string, PORT int) {
 
@@ -78,14 +80,14 @@ func (client *Client) listenForServer(done chan bool) {
 
 		if err != nil {
 			fmt.Println(err)
-			fmt.Println("Cannot read from the server\n")
+			fmt.Printf("Cannot read from the server\n")
 			return
 		}
 
 		err = json.Unmarshal(msg, &message)
 
 		if err != nil {
-			fmt.Printf("Didn't get proper response form server")
+			fmt.Printf("Didn't get proper response form server\n")
 			fmt.Println(err)
 		}
 
@@ -95,7 +97,7 @@ func (client *Client) listenForServer(done chan bool) {
 			client.init()
 		} else if message.MsgType == norStrMsg {
 
-			fmt.Printf("\n (%s)>  : %s \n > : ", message.ClientID, message.Msg)
+			client.printNewMsg(message)
 		}
 
 	}
@@ -104,12 +106,14 @@ func (client *Client) listenForServer(done chan bool) {
 
 func (client *Client) waitForUserInp() {
 
-	scanner := bufio.NewScanner(os.Stdin)
+	scanner = bufio.NewScanner(os.Stdin)
 	var text string
 
+	fmt.Print(" | ------------- Welcome to the system ----------  |\n")
 	for text != "q" { // break the loop if text == "q"
 
-		fmt.Print(" > : ")
+		fmt.Printf("\rYou : ")
+
 		scanner.Scan()
 		text = scanner.Text()
 
@@ -123,6 +127,15 @@ func (client *Client) waitForUserInp() {
 			client.sendMessage(&message)
 		}
 	}
+
+}
+
+func (client *Client) printNewMsg(message *Message) {
+
+	client.mutex.Lock()
+	defer client.mutex.Unlock()
+	fmt.Printf("\r\n")
+	fmt.Printf("\033[A\033[A\r %s : %s \n", message.ClientID, message.Msg)
 
 }
 
