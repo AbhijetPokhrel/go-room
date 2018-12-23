@@ -20,15 +20,6 @@ import (
 	"strconv"
 )
 
-/**
- * The default server room
- */
-var DEFAULT_SERVER_ROOM = "Server787800p"
-
-/**
- * The HANDLER object handle the entire rooms for chat
- * - It is created when server/client mode is used
- */
 var handler = new(Handler)
 
 /**
@@ -95,17 +86,24 @@ func executeMode(param []string) {
 		}
 
 		if len(param) <= 2 {
-			fmt.Printf("Enter port information : \n\t%s <PORT> <CLIENT_ID> \n", param[1])
+			fmt.Printf("Enter port information : \n\t%s <PORT> <CLIENT_ID> <ROOM_NAME>\n", param[1])
 			return
 		}
 
 		if len(param) <= 3 {
-			fmt.Printf("Enter clietn ID : \n\t%s %s <CLIENT_ID> \n", param[1], param[2])
+			fmt.Printf("Enter clietn ID : \n\t%s %s <CLIENT_ID> <ROOM_NAME>\n", param[1], param[2])
+			return
+		}
+		if len(param) <= 4 {
+			fmt.Printf("Enter room name : \n\t%s %s %s <ROOM_NAME> \n", param[1], param[2], param[3])
 			return
 		}
 
 		var IP, clientID = param[1], param[3]
 		PORT, err := strconv.Atoi(param[2])
+		defautRoom = param[4]
+
+		fmt.Printf("def room : %s", defautRoom)
 
 		if err != nil {
 			fmt.Println("Error valid port num!!!")
