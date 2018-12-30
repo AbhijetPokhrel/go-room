@@ -18,6 +18,7 @@ import (
 // rooms is the array of rooms the client is associated with
 // mutex is the mutex to make sure the message sends are thread safe
 // isBusy marks if the cleint is busy sending the message from the message queue
+// buffer is the messages that are still left to be read
 type Client struct {
 	id           string       // the client ID
 	messageQueue *queue.Queue // the queues of string message
@@ -25,6 +26,7 @@ type Client struct {
 	rooms        []*Room      // the rooms that its associated with
 	mutex        *sync.Mutex  // mutex to make sure the message sends are thread safe
 	isBusy       bool         // is client busy sending messages
+	buffer       []byte       // the byte of message to be read
 }
 
 // +----------------------------------------------------------------------------------------------------------------+
@@ -193,7 +195,7 @@ func (client *Client) listenForServer(done chan bool) {
 	// loop until the EOF reacheds
 	for {
 
-		msg, err = handler.read(client.conn)
+		msg, err = handler.read(client)
 
 		if err != nil {
 			fmt.Println(err)
