@@ -176,6 +176,9 @@ func (handler *Handler) read(client *Client) ([]byte, error) {
 			return nil, errors.New("Read Max execution time exceeded")
 		}
 
+		// first of all read form the client buffer
+		// the client buffer has some pending messages
+		// after reading from the client buffer, read from the socket
 		if len(client.buffer) > 0 {
 
 			// initialize message byte
@@ -183,7 +186,7 @@ func (handler *Handler) read(client *Client) ([]byte, error) {
 			// read from the client buffer
 			read = len(client.buffer)
 
-		} else {
+		} else { // read from the socket here
 
 			// initialize the message byte to the buffer size
 			msgByte = make([]byte, StrMsgBufferSize)

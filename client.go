@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -178,7 +177,7 @@ func (client *Client) sendHelloMessage() error {
 	fmt.Printf("Sending hello message \n")
 	message := Message{
 		ClientID: client.id,
-		Msg:      "Hi! I am new user",
+		Msg:      []byte("Hi! I am new user"),
 		MsgType:  norStrMsg,
 		RoomID:   defautRoom,
 	}
@@ -190,7 +189,7 @@ func (client *Client) listenForServer(done chan bool) {
 
 	var msg []byte
 	var err error
-	var message = new(Message)
+	var message *Message
 
 	// loop until the EOF reacheds
 	for {
@@ -203,7 +202,7 @@ func (client *Client) listenForServer(done chan bool) {
 			return
 		}
 
-		err = json.Unmarshal(msg, &message)
+		message, err = _messsageDecode(&msg)
 
 		if err != nil {
 			fmt.Printf("Didn't get proper response form server\n")
@@ -240,7 +239,7 @@ func (client *Client) waitForUserInp() {
 		if text != "q" {
 			message := Message{
 				ClientID: client.id,
-				Msg:      text,
+				Msg:      []byte(text),
 				MsgType:  norStrMsg,
 				RoomID:   defautRoom,
 			}

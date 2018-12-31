@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 )
@@ -79,8 +78,7 @@ func (server *Server) handleClient(conn *net.Conn) {
 	fmt.Printf("msg :` %s`\n", msg)
 
 	//decode the message
-	message := new(Message)
-	err = json.Unmarshal(msg, &message)
+	message, err := _messsageDecode(&msg)
 
 	if err != nil {
 		fmt.Println(err)
@@ -124,10 +122,10 @@ func (server *Server) startListeningFromClient(client *Client) error {
 			handler.removeClient(client)
 		}
 
-		fmt.Printf("msg : %s\n", msg)
+		fmt.Printf("msg : `%s`\n", msg)
 		//decode the message
-		message := new(Message)
-		err = json.Unmarshal(msg, &message)
+
+		message, err := _messsageDecode(&msg)
 
 		if err != nil {
 			return err
@@ -151,7 +149,7 @@ func (server *Server) handleMessage(message *Message, client *Client) error {
 		client.id = message.ClientID
 		// now send the client ok message
 		message := Message{
-			Msg: "OK",
+			Msg: []byte{'O', 'k'},
 		}
 		// send ok message
 		err := handler.write(message.controlInit(), (*client).conn)

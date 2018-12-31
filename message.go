@@ -1,8 +1,9 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
+	"bytes"
+	"errors"
+	"strconv"
 )
 
 // Message is the prototype of message payload
@@ -16,7 +17,7 @@ type Message struct {
 	ClientID   string
 	ReceiverID string
 	RoomID     string
-	Msg        string
+	Msg        []byte
 	MsgType    int
 }
 
@@ -39,13 +40,122 @@ func (message *Message) controlInit() []byte {
 // generateByte generates the necessary byte along with the server
 func (message *Message) generateByte() []byte {
 
-	json, err := json.Marshal(*message)
+	return message.encode()
 
-	if err != nil {
-		fmt.Println(err)
-		return nil
+}
+
+func (message *Message) encode() []byte {
+
+	var buf bytes.Buffer
+
+	if message.ClientID != "" {
+		_messageEncodeElem("ClientID", message.ClientID, &buf)
 	}
 
-	return append(json, MsgSep...)
+	if message.RoomID != "" {
+		_messageEncodeElem("RoomID", message.RoomID, &buf)
+	}
+
+	if message.ReceiverID != "" {
+		_messageEncodeElem("ReceiverID", message.ReceiverID, &buf)
+	}
+
+	if message.MsgType != 0 {
+		_messageEncodeElem("MsgType", strconv.Itoa(message.MsgType), &buf)
+	}
+
+	buf.Write(message.Msg) // write the msg payload
+	buf.Write(MsgSep)
+
+	return buf.Bytes()
+
+}
+
+// _messageDecode decodes the message byte to message pointer
+// b is the byte of message
+func _messsageDecode(b *[]byte) (*Message, error) {
+
+	message := Message{}
+
+	msg := bytes.Split(*b, elemSep)
+	// if the length of msg slice is less than the message is invalid
+	if len(msg) < 2 {
+		return nil, errors.New("Invalid message")
+	}
+
+	// elemCount counts the number of elements added to the message like MsgType,Msg etc..
+	// the elemCount should be equal to len(msg) after the loop coming
+	var elemCount int
+
+	// loop until the last element
+	// the last element is the payload
+	for index, element := range msg {
+
+		if (index + 1) == len(msg) {
+
+			message.Msg = element
+			elemCount++
+			break
+		}
+
+		elem := bytes.Split(element, keyValSep)
+
+		if len(elem) < 2 {
+			return nil, errors.New("Invalid message")
+		}
+
+		// find the approprite elem of message
+		// if unknown elem is sent then this is an errors
+		switch string(elem[0]) {
+
+		case "ClientID":
+
+			message.ClientID = string(elem[1])
+			elemCount++
+
+		case "ReceiverID":
+
+			message.ReceiverID = string(elem[1])
+			elemCount++
+
+		case "RoomID":
+
+			message.RoomID = string(elem[1])
+			elemCount++
+
+		case "MsgType":
+
+			msgType, err := strconv.ParseInt(string(elem[1]), 10, 16)
+
+			if err != nil {
+				return nil, err
+			}
+
+			message.MsgType = int(msgType)
+			elemCount++
+
+		default: // unknown elemetn which is a error
+			return nil, errors.New("Invalid message")
+
+		} // switch case ends
+
+	} // for loop ends
+
+	if elemCount != len(msg) {
+		return nil, errors.New("Invalid message")
+	}
+
+	// Now we have a valid message
+
+	return &message, nil
+
+}
+
+func _messageEncodeElem(key string, val string, buff *bytes.Buffer) {
+
+	buff.WriteString(key)
+	buff.Write(keyValSep)
+	buff.WriteString(val)
+	buff.Write(elemSep)
 
 }
