@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"go_chat/helper"
+	"go-room/helper"
 	"net"
 	"sync"
 )
@@ -149,7 +149,7 @@ func (handler *Handler) removeClient(client *Client) {
 // The main logic here is that we read until we find the msg separator
 // If in the read process the time exceeds the MAX_WAIT_TIME an error is thrown
 // We will also setDeadline here
-func (handler *Handler) read(conn *net.Conn) ([]byte, error) {
+func (handler *Handler) read(client *Client) ([]byte, error) {
 
 	// total is the total writes in bytes
 	var total = 0
@@ -175,23 +175,57 @@ func (handler *Handler) read(conn *net.Conn) ([]byte, error) {
 		if (helper.NowAsUnixMilli() - nowMillis) > MaxWaitTime {
 			return nil, errors.New("Read Max execution time exceeded")
 		}
-		// initialize the message byte to the buffer size
-		msgByte = make([]byte, StrMsgBufferSize)
-		// read from the client sock
-		read, err = (*conn).Read(msgByte)
-		// if there is any error return it
-		if err != nil {
-			return nil, err
+
+		// first of all read form the client buffer
+		// the client buffer has some pending messages
+		// after reading from the client buffer, read from the socket
+		if len(client.buffer) > 0 {
+
+			// initialize message byte
+			msgByte = client.buffer
+			// read from the client buffer
+			read = len(client.buffer)
+
+		} else { // read from the socket here
+
+			// initialize the message byte to the buffer size
+			msgByte = make([]byte, StrMsgBufferSize)
+			// read from the client sock
+			read, err = (*(*client).conn).Read(msgByte)
+			// if there is any error return it
+			if err != nil {
+				return nil, err
+			}
+
 		}
+
 		// add total read
 		total += read
 		// write to the byte buffer
 		buf.Write(msgByte[0:read])
 
 		if read > len(MsgSep) {
-			if bytes.Equal(MsgSep, msgByte[read-len(MsgSep):read]) {
-				total = total - len(MsgSep)
-				return buf.Bytes()[0:total], nil
+
+			b := buf.Bytes()
+			index := bytes.Index(b, MsgSep)
+
+			if index != -1 { // -1 markes the index is not found
+
+				if index == 0 {
+					return []byte{}, nil
+				}
+
+				// if the total read is less than index then it markes that some
+				// other messages are also pending from this client
+				// we need to listen to that as well
+				// hence we need to add these unread messages to the buffer of the client
+				if index+len(MsgSep) < total { // add the remaining to the client buffer
+					client.buffer = b[index+len(MsgSep) : total]
+				} else { // no no more pending message to read
+					client.buffer = []byte{}
+				}
+
+				return b[0:index], nil
 			}
 		}
 

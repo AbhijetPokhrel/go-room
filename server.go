@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 )
@@ -15,6 +14,7 @@ type Server struct {
 }
 
 func (server *Server) start(PORT int) {
+
 	server.PORT = PORT
 	listener, error := net.Listen("tcp", fmt.Sprintf(":%d", server.PORT))
 
@@ -59,11 +59,15 @@ func (server *Server) handleClient(conn *net.Conn) {
 
 	fmt.Printf("Adding new client\n")
 
+	client := Client{
+		conn: conn,
+	}
+
 	//read the init message
 	//the init message will not need more than 100 bytes
 	var err error
 	var msg []byte
-	msg, err = handler.read(conn)
+	msg, err = handler.read(&client)
 
 	if err != nil {
 		fmt.Println(err)
@@ -74,8 +78,7 @@ func (server *Server) handleClient(conn *net.Conn) {
 	fmt.Printf("msg :` %s`\n", msg)
 
 	//decode the message
-	message := new(Message)
-	err = json.Unmarshal(msg, &message)
+	message, err := _messsageDecode(&msg)
 
 	if err != nil {
 		fmt.Println(err)
@@ -89,7 +92,7 @@ func (server *Server) handleClient(conn *net.Conn) {
 		return
 	}
 
-	err = server.handleMessage(message, conn)
+	err = server.handleMessage(message, &client)
 
 	if err != nil {
 		fmt.Println(err)
@@ -109,7 +112,7 @@ func (server *Server) startListeningFromClient(client *Client) error {
 
 	for {
 
-		msg, err = handler.read(client.conn)
+		msg, err = handler.read(client)
 
 		if err != nil {
 			return err
@@ -119,16 +122,16 @@ func (server *Server) startListeningFromClient(client *Client) error {
 			handler.removeClient(client)
 		}
 
-		fmt.Printf("msg : %s\n", msg)
+		fmt.Printf("msg : `%s`\n", msg)
 		//decode the message
-		message := new(Message)
-		err = json.Unmarshal(msg, &message)
+
+		message, err := _messsageDecode(&msg)
 
 		if err != nil {
 			return err
 		}
 
-		err = server.handleMessage(message, client.conn)
+		err = server.handleMessage(message, client)
 
 		if err != nil {
 			return err
@@ -137,32 +140,29 @@ func (server *Server) startListeningFromClient(client *Client) error {
 	}
 }
 
-func (server *Server) handleMessage(message *Message, conn *net.Conn) error {
+func (server *Server) handleMessage(message *Message, client *Client) error {
 
 	switch message.MsgType {
 
 	case ctrlInitMsg:
 		// every thing is ok so new lets add client to the handler
-		client := Client{
-			id:   message.ClientID,
-			conn: conn,
-		}
+		client.id = message.ClientID
 		// now send the client ok message
 		message := Message{
-			Msg: "OK",
+			Msg: []byte{'O', 'k'},
 		}
 		// send ok message
-		err := handler.write(message.controlInit(), conn)
+		err := handler.write(message.controlInit(), (*client).conn)
 		if err != nil {
 			return nil
 		}
 		// finally add client to handler
-		handler.addClient(&client)
+		handler.addClient(client)
 		// now listen from the client
-		err = server.startListeningFromClient(&client)
+		err = server.startListeningFromClient(client)
 		if err != nil {
 			fmt.Println("error ")
-			handler.removeClient(&client)
+			handler.removeClient(client)
 			return err
 		}
 	case norStrMsg:

@@ -16,6 +16,10 @@ var StrMsgBufferSize = 800
 // for string message it marks the end of the message
 var MsgSep = []byte{'\r', '\n', '@', '#', '\t'}
 
+var keyValSep = []byte{'-'}
+
+var elemSep = []byte{'^', '\r', '\n'}
+
 // controlMsg is the control command indicating messsage
 // the message can be either control or normal
 // control message include operations like initialize, end, restore..etc
