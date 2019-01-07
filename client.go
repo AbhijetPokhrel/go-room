@@ -80,7 +80,6 @@ func (client *Client) sendQueueMsgs() {
 
 	// set client busy
 	client.isBusy = true
-	fmt.Printf("client ( %s ) busy \n", client.id)
 	var message []interface{}
 	var err error
 
@@ -95,7 +94,6 @@ func (client *Client) sendQueueMsgs() {
 
 	// finally set the client free
 	client.isBusy = false
-	fmt.Printf("client ( %s ) free \n", client.id)
 
 }
 

@@ -75,8 +75,6 @@ func (server *Server) handleClient(conn *net.Conn) {
 		return
 	}
 
-	fmt.Printf("msg :` %s`\n", msg)
-
 	//decode the message
 	message, err := _messsageDecode(&msg)
 
@@ -122,12 +120,14 @@ func (server *Server) startListeningFromClient(client *Client) error {
 			handler.removeClient(client)
 		}
 
-		fmt.Printf("msg : `%s`\n", msg)
 		//decode the message
 
 		message, err := _messsageDecode(&msg)
 
 		if err != nil {
+
+			fmt.Printf("\n\n ## msg ========================================= >||||\n  %s \n |||<<<< =========================================\n\n", msg)
+
 			return err
 		}
 
@@ -161,14 +161,24 @@ func (server *Server) handleMessage(message *Message, client *Client) error {
 		// now listen from the client
 		err = server.startListeningFromClient(client)
 		if err != nil {
-			fmt.Println("error ")
+			fmt.Println("error 11")
+			fmt.Println(err)
 			handler.removeClient(client)
 			return err
 		}
 	case norStrMsg:
 		// normal string message
 		server.processNewMessage(message)
+
+	case statusTyping:
+		// user is typing
+		server.processNewMessage(message)
+	case streamFile:
+		// file stream message
+		server.processNewMessage(message)
+
 	}
+
 	return nil
 }
 

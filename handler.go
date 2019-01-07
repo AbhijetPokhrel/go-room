@@ -159,50 +159,51 @@ func (handler *Handler) read(client *Client) ([]byte, error) {
 	var err error
 	// msgBytes it the byte on which a read operation writes the data
 	var msgByte []byte
-	// nowMillis is the current time in milliseconds
-	nowMillis := helper.NowAsUnixMilli()
+	// startMillis is the current time in milliseconds when start to read
+	var startMillis, nowMillis = int64(0), int64(0)
 	// buf is the buffer where we append all the read bytes
 	var buf bytes.Buffer
 
-	//first setup read deadline
+	// first of all read form the client buffer
+	// the client buffer has some pending messages
+	// after reading from the client buffer, read from the socket
+	buf.Write(client.buffer)
+	total += len(client.buffer)
 
 	/**
 	 * Loop intil the MSG_SEP is found
 	 */
 	for {
 
+		fmt.Printf("%d - %d => diff : %d \n", nowMillis, startMillis, nowMillis-startMillis)
 		// check if the max wait time has exceeded
-		if (helper.NowAsUnixMilli() - nowMillis) > MaxWaitTime {
+		if (nowMillis - startMillis) > MaxWaitTime {
 			return nil, errors.New("Read Max execution time exceeded")
 		}
 
-		// first of all read form the client buffer
-		// the client buffer has some pending messages
-		// after reading from the client buffer, read from the socket
-		if len(client.buffer) > 0 {
-
-			// initialize message byte
-			msgByte = client.buffer
-			// read from the client buffer
-			read = len(client.buffer)
-
-		} else { // read from the socket here
-
-			// initialize the message byte to the buffer size
-			msgByte = make([]byte, StrMsgBufferSize)
-			// read from the client sock
-			read, err = (*(*client).conn).Read(msgByte)
-			// if there is any error return it
-			if err != nil {
-				return nil, err
-			}
-
+		fmt.Println("reading from sock \n")
+		// initialize the message byte to the buffer size
+		msgByte = make([]byte, StrMsgBufferSize)
+		// read from the client sock
+		read, err = (*(*client).conn).Read(msgByte)
+		// if there is any error return it
+		if err != nil {
+			return nil, err
 		}
 
+		nowMillis = helper.NowAsUnixMilli()
+
+		if startMillis == 0 {
+			startMillis = nowMillis
+		}
+
+		fmt.Printf("before %d\n", total)
 		// add total read
 		total += read
 		// write to the byte buffer
 		buf.Write(msgByte[0:read])
+
+		fmt.Printf("read %d\n", total)
 
 		if read > len(MsgSep) {
 
@@ -225,7 +226,10 @@ func (handler *Handler) read(client *Client) ([]byte, error) {
 					client.buffer = []byte{}
 				}
 
+				fmt.Println("found \n")
 				return b[0:index], nil
+			} else {
+				fmt.Println("Index not found")
 			}
 		}
 

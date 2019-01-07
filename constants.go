@@ -14,9 +14,9 @@ var StrMsgBufferSize = 800
 
 // MsgSep is the separator that separates each of the messages
 // for string message it marks the end of the message
-var MsgSep = []byte{'\r', '\n', '@', '#', '\t'}
+var MsgSep = []byte(">>>====!@#\r\nRRt%^**456--I Love Nepal <<<=========\r\nrty456$7")
 
-var keyValSep = []byte{'-'}
+var keyValSep = []byte{'>', '-', '+'}
 
 var elemSep = []byte{'^', '\r', '\n'}
 
@@ -24,6 +24,16 @@ var elemSep = []byte{'^', '\r', '\n'}
 // the message can be either control or normal
 // control message include operations like initialize, end, restore..etc
 var controlMsg = 0xF0
+
+// statusMsg represents the status info
+// the status message may be ping messag
+// also it may be pong message
+// thte user typing is also one satatus
+var statusMsg = 0x70
+
+// streamMsg represnt the straming data
+// the streaMSg may be file, call, video etc...
+var streamMsg = 0x03
 
 // normalMsg is the normal messaging request like string message or file message
 var normalMsg = 0x00
@@ -43,6 +53,15 @@ var norStrMsg = normalMsg | (0x01) // 0000 0001
 
 // norFileMsg is the normal file message
 var norFileMsg = normalMsg | (0x02) // 0000 0010s
+
+// +------------------------  Diffrent Status messages -------------------------------------+
+
+var statusTyping = statusMsg | (0x00) // 0111 0000
+var statusPing = statusMsg | (0x01)   // 0111 0001
+
+// +------------------------  Diffrent Stream messages -------------------------------------+
+
+var streamFile = streamMsg | (0x00) // 0011 0000
 
 // +------------------------------### Msg section Ends ###---------------------------------------------+
 
