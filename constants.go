@@ -18,7 +18,7 @@ var MsgSep = []byte(">>>====!@#\r\nRRt%^**456--I Love Nepal <<<=========\r\nrty4
 
 var keyValSep = []byte{'>', '-', '+'}
 
-var elemSep = []byte{'^', '\r', '\n'}
+var elemSep = []byte("^\r\n%8r^")
 
 // controlMsg is the control command indicating messsage
 // the message can be either control or normal
