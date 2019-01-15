@@ -18,7 +18,7 @@ var MsgSep = []byte(">>>====!@#\r\nRRt%^**456--I Love Nepal <<<=========\r\nrty4
 
 var keyValSep = []byte{'>', '-', '+'}
 
-var elemSep = []byte{'^', '\r', '\n'}
+var elemSep = []byte("^\r\n%8r^")
 
 // controlMsg is the control command indicating messsage
 // the message can be either control or normal
@@ -33,7 +33,7 @@ var statusMsg = 0x70
 
 // streamMsg represnt the straming data
 // the streaMSg may be file, call, video etc...
-var streamMsg = 0x03
+var streamMsg = 0x30
 
 // normalMsg is the normal messaging request like string message or file message
 var normalMsg = 0x00
@@ -44,7 +44,7 @@ var normalMsg = 0x00
 var ctrlInitMsg = controlMsg | (0x01) // 1111 0001
 
 // cntrlEndMsg is the message type for termination the connection
-var ctrlEndMsg = normalMsg | (0x02) // 1111 0010
+var ctrlEndMsg = controlMsg | (0x02) // 1111 0010
 
 // +------------------------  Diffrent Normal messages -------------------------------------+
 
@@ -52,7 +52,16 @@ var ctrlEndMsg = normalMsg | (0x02) // 1111 0010
 var norStrMsg = normalMsg | (0x01) // 0000 0001
 
 // norFileMsg is the normal file message
-var norFileMsg = normalMsg | (0x02) // 0000 0010s
+var norFileMsg = normalMsg | (0x02) // 0000 0010
+
+// norIntroMsg is the normal introduction message
+var norIntroMsg = normalMsg | (0x03) // 0000 0011
+
+// norDouYouKnwMsg is the normal message to query other mate if they knw someone
+var norDouYouKnwMsg = normalMsg | (0x04) // 0000 0100
+
+// norDouYouKnwMsg is the normal message to query other mate if they knw someone
+var norFileReq = normalMsg | (0x05) // 0000 0101
 
 // +------------------------  Diffrent Status messages -------------------------------------+
 

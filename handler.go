@@ -132,6 +132,16 @@ func (handler *Handler) addClient(client *Client) {
 
 }
 
+// getClient returns the client associated to the client ID
+func (handler *Handler) getClient(clientID string) *Client{
+
+	handler.mutex.Lock()
+	defer handler.mutex.Unlock()
+	
+	return handler.clients[clientID]
+
+}
+
 // removeClient removes the client
 func (handler *Handler) removeClient(client *Client) {
 

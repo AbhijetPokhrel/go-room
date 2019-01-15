@@ -80,6 +80,7 @@ func (server *Server) handleClient(conn *net.Conn) {
 
 	if err != nil {
 		fmt.Println(err)
+		fmt.Printf("\n\n ## msg ========================================= >||||\n  %s \n |||<<<< ========================================= \n\n", msg)
 		fmt.Println("Cannot read from the client\n")
 		return
 	}
@@ -175,6 +176,40 @@ func (server *Server) handleMessage(message *Message, client *Client) error {
 		server.processNewMessage(message)
 	case streamFile:
 		// file stream message
+		server.processNewMessage(message)
+
+	case norIntroMsg:
+		// introduction message
+		server.processNewMessage(message)
+
+	case norDouYouKnwMsg:
+		
+		// asking for if the user knows someone
+		// check if the user is in the clients lists
+		// if there give user available
+		// if not then say not available
+		// its the only way to find a member here
+		c := handler.getClient(string(message.Msg))
+		m := &Message{
+			MsgType : message.MsgType,
+			Msg : message.Msg,
+		}
+		if (c == nil){
+			m.Msg = append(m.Msg,[]byte("   NOT_FOUND")...)
+		}else{
+			c.addMsgQueue(m) // give the message to the user
+		}
+
+		fmt.Printf("found  stat %s \n",string(m.Msg))
+		client.addMsgQueue(m) 
+
+
+	case norFileReq:
+		// request for some files
+		server.processNewMessage(message)
+
+	case norFileMsg:
+		// response for some file request
 		server.processNewMessage(message)
 
 	}

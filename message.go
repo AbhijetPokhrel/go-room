@@ -103,12 +103,13 @@ func _messsageDecode(b *[]byte) (*Message, error) {
 			message.Msg = element
 			elemCount++
 			break
+
 		}
 
 		elem := bytes.Split(element, keyValSep)
 
 		if len(elem) < 2 {
-			return nil, errors.New("Invalid message : invalid length")
+			return nil, errors.New(fmt.Sprintf("Invalid message : invalid length %d elemCounted %d",len(elem),elemCount))
 		}
 
 		// find the approprite elem of message
