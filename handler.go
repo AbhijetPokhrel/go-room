@@ -185,13 +185,11 @@ func (handler *Handler) read(client *Client) ([]byte, error) {
 	 */
 	for {
 
-		fmt.Printf("%d - %d => diff : %d \n", nowMillis, startMillis, nowMillis-startMillis)
 		// check if the max wait time has exceeded
 		if (nowMillis - startMillis) > MaxWaitTime {
 			return nil, errors.New("Read Max execution time exceeded")
 		}
 
-		fmt.Println("reading from sock \n")
 		// initialize the message byte to the buffer size
 		msgByte = make([]byte, StrMsgBufferSize)
 		// read from the client sock
@@ -207,13 +205,10 @@ func (handler *Handler) read(client *Client) ([]byte, error) {
 			startMillis = nowMillis
 		}
 
-		fmt.Printf("before %d\n", total)
 		// add total read
 		total += read
 		// write to the byte buffer
 		buf.Write(msgByte[0:read])
-
-		fmt.Printf("read %d\n", total)
 
 		if read > len(MsgSep) {
 
@@ -236,10 +231,7 @@ func (handler *Handler) read(client *Client) ([]byte, error) {
 					client.buffer = []byte{}
 				}
 
-				fmt.Println("found \n")
 				return b[0:index], nil
-			} else {
-				fmt.Println("Index not found")
 			}
 		}
 
