@@ -3,6 +3,7 @@
 */
 package main
 
+var version = []byte("0.0.2")
 // MaxWaitTime  is the time for a single string message to arrive upon
 // if the  message does not completely arrive upon this time , the handler will throw an error
 var MaxWaitTime int64 = 3000 // 3s
