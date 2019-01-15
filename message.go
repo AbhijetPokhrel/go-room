@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"strconv"
 )
 
@@ -11,12 +12,14 @@ import (
 // ClientID is the id of the sender
 // ReceiverID is the id of the receiver client
 // RoomID is the id of the room for which it was assigned for
+// Info is some additional message from the message payload
 // Msg is the string message
 // MsgType is the type of the message that is being sent (For more details on message type see constants)
 type Message struct {
 	ClientID   string
 	ReceiverID string
 	RoomID     string
+	Info       string
 	Msg        []byte
 	MsgType    int
 }
@@ -60,6 +63,10 @@ func (message *Message) encode() []byte {
 		_messageEncodeElem("ReceiverID", message.ReceiverID, &buf)
 	}
 
+	if message.Info != "" {
+		_messageEncodeElem("Info", message.Info, &buf)
+	}
+
 	if message.MsgType != 0 {
 		_messageEncodeElem("MsgType", strconv.Itoa(message.MsgType), &buf)
 	}
@@ -80,7 +87,7 @@ func _messsageDecode(b *[]byte) (*Message, error) {
 	msg := bytes.Split(*b, elemSep)
 	// if the length of msg slice is less than the message is invalid
 	if len(msg) < 2 {
-		return nil, errors.New("Invalid message")
+		return nil, errors.New(fmt.Sprintf("Invalid message : invalid msg len %d", len(msg)))
 	}
 
 	// elemCount counts the number of elements added to the message like MsgType,Msg etc..
@@ -96,12 +103,13 @@ func _messsageDecode(b *[]byte) (*Message, error) {
 			message.Msg = element
 			elemCount++
 			break
+
 		}
 
 		elem := bytes.Split(element, keyValSep)
 
 		if len(elem) < 2 {
-			return nil, errors.New("Invalid message")
+			return nil, errors.New(fmt.Sprintf("Invalid message : invalid length %d elemCounted %d",len(elem),elemCount))
 		}
 
 		// find the approprite elem of message
@@ -123,6 +131,11 @@ func _messsageDecode(b *[]byte) (*Message, error) {
 			message.RoomID = string(elem[1])
 			elemCount++
 
+		case "Info":
+
+			message.Info = string(elem[1])
+			elemCount++
+
 		case "MsgType":
 
 			msgType, err := strconv.ParseInt(string(elem[1]), 10, 16)
@@ -135,7 +148,8 @@ func _messsageDecode(b *[]byte) (*Message, error) {
 			elemCount++
 
 		default: // unknown elemetn which is a error
-			return nil, errors.New("Invalid message")
+
+			return nil, errors.New(fmt.Sprintf("Invalid message : Unknown Elem(%s)", string(elem[0])))
 
 		} // switch case ends
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"net"
 	"os"
@@ -80,7 +81,6 @@ func (client *Client) sendQueueMsgs() {
 
 	// set client busy
 	client.isBusy = true
-	fmt.Printf("client ( %s ) busy \n", client.id)
 	var message []interface{}
 	var err error
 
@@ -95,7 +95,6 @@ func (client *Client) sendQueueMsgs() {
 
 	// finally set the client free
 	client.isBusy = false
-	fmt.Printf("client ( %s ) free \n", client.id)
 
 }
 
@@ -211,11 +210,29 @@ func (client *Client) listenForServer(done chan bool) {
 
 		// every thing is ok
 		if message.MsgType == ctrlInitMsg {
+
 			// initiate message queue
 			client.init()
+
 		} else if message.MsgType == norStrMsg {
+
 			// here is the new string message hence print it
 			client.printNewMsg(message)
+
+		} else if message.MsgType == statusTyping {
+
+			if bytes.Equal(message.Msg, []byte("true")) {
+
+				fmt.Printf("%s typing.... \n", message.ClientID)
+
+			} else {
+
+				fmt.Printf("%s stopped typing.... \n", message.ClientID)
+
+			}
+
+		} else if message.MsgType == streamFile {
+
 		}
 
 	}

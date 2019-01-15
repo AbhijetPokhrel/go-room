@@ -132,6 +132,16 @@ func (handler *Handler) addClient(client *Client) {
 
 }
 
+// getClient returns the client associated to the client ID
+func (handler *Handler) getClient(clientID string) *Client{
+
+	handler.mutex.Lock()
+	defer handler.mutex.Unlock()
+	
+	return handler.clients[clientID]
+
+}
+
 // removeClient removes the client
 func (handler *Handler) removeClient(client *Client) {
 
@@ -159,12 +169,16 @@ func (handler *Handler) read(client *Client) ([]byte, error) {
 	var err error
 	// msgBytes it the byte on which a read operation writes the data
 	var msgByte []byte
-	// nowMillis is the current time in milliseconds
-	nowMillis := helper.NowAsUnixMilli()
+	// startMillis is the current time in milliseconds when start to read
+	var startMillis, nowMillis = int64(0), int64(0)
 	// buf is the buffer where we append all the read bytes
 	var buf bytes.Buffer
 
-	//first setup read deadline
+	// first of all read form the client buffer
+	// the client buffer has some pending messages
+	// after reading from the client buffer, read from the socket
+	buf.Write(client.buffer)
+	total += len(client.buffer)
 
 	/**
 	 * Loop intil the MSG_SEP is found
@@ -172,31 +186,23 @@ func (handler *Handler) read(client *Client) ([]byte, error) {
 	for {
 
 		// check if the max wait time has exceeded
-		if (helper.NowAsUnixMilli() - nowMillis) > MaxWaitTime {
+		if (nowMillis - startMillis) > MaxWaitTime {
 			return nil, errors.New("Read Max execution time exceeded")
 		}
 
-		// first of all read form the client buffer
-		// the client buffer has some pending messages
-		// after reading from the client buffer, read from the socket
-		if len(client.buffer) > 0 {
+		// initialize the message byte to the buffer size
+		msgByte = make([]byte, StrMsgBufferSize)
+		// read from the client sock
+		read, err = (*(*client).conn).Read(msgByte)
+		// if there is any error return it
+		if err != nil {
+			return nil, err
+		}
 
-			// initialize message byte
-			msgByte = client.buffer
-			// read from the client buffer
-			read = len(client.buffer)
+		nowMillis = helper.NowAsUnixMilli()
 
-		} else { // read from the socket here
-
-			// initialize the message byte to the buffer size
-			msgByte = make([]byte, StrMsgBufferSize)
-			// read from the client sock
-			read, err = (*(*client).conn).Read(msgByte)
-			// if there is any error return it
-			if err != nil {
-				return nil, err
-			}
-
+		if startMillis == 0 {
+			startMillis = nowMillis
 		}
 
 		// add total read
