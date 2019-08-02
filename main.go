@@ -9,7 +9,16 @@
 		In order to run the server type
 		+-------------------------------------------------+
 		|	<EXEC_CMD> mode server <PORT_NUM>             |
-	+-------------------------------------------------+
+		+-------------------------------------------------+
+
+		The clients will create or connect to room. These rooms can be joined by
+		other clients and clients can make converstaion on that room
+
+		The client command is as below
+
+		+--------------------------------------------------------------------------------------------+
+		|	<EXEC_CMD> mode client <SERVER_IP> <PORT_NUM> <CLIENT_UNIQUE_NAME>  <ROOM_NAME>          |
+		+--------------------------------------------------------------------------------------------+
 */
 
 package main
@@ -24,19 +33,21 @@ import (
 )
 
 var (
-	Trace   *log.Logger
-	Info    *log.Logger
+	// Trace log
+	Trace *log.Logger
+	// Info log
+	Info *log.Logger
+	// Warning log
 	Warning *log.Logger
-	Error   *log.Logger
+	// Error log
+	Error *log.Logger
 )
 
 var handler = new(Handler)
 
-/**
- * The main function
- * starts by reading the execution commnads
- * app <commad> <param>
- */
+// The main function
+// starts by reading the execution commnads
+//app <commad> <param>
 func main() {
 	Init(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
 	args := os.Args
@@ -53,6 +64,7 @@ func main() {
 
 }
 
+// Init loads the loggers
 func Init(
 	traceHandle io.Writer,
 	infoHandle io.Writer,
@@ -76,9 +88,7 @@ func Init(
 		log.Ldate|log.Ltime|log.Lshortfile)
 }
 
-/**
- * Execute the instruction as per the arguments provided
- */
+// Execute the instruction as per the arguments provided
 func execute(a []string) {
 	if a[1] == "mode" { //evaluate the mode section
 		executeMode(a[2:])
@@ -87,9 +97,7 @@ func execute(a []string) {
 	}
 }
 
-/**
- * Execute the mode commnad
- */
+// executeMode executes the program as per the mode specified
 func executeMode(param []string) {
 	fmt.Printf("execute mode command : %s \n", param)
 

@@ -173,7 +173,7 @@ func (client *Client) connect(IP string, PORT int) {
 // all the room members
 func (client *Client) sendHelloMessage() error {
 
-	fmt.Printf("Sending hello message \n")
+	fmt.Printf("Sending hello message %s\n", defautRoom)
 	message := Message{
 		ClientID: client.id,
 		Msg:      []byte("Hi! I am new user"),
