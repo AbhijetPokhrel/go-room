@@ -14,5 +14,5 @@ go build
 
 ## Step 3 : Join server from unique client id and room name
 ```
-./build_name mode client <SERVER_IP> <UNIQUE_CLIENT_ID> <ROOM_NAME>
+./build_name mode client <SERVER_IP> <PORT_NUM> <UNIQUE_CLIENT_ID> <ROOM_NAME>
 ```
